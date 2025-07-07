@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holographic Character Card</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #222;
+            overflow: hidden;
+        }
+        
+        .card-container {
+            position: relative;
+            width: 800px;
+            height: 800px;
+            perspective: 1000px;
+        }
+        
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+        
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            backface-visibility: hidden;
+        }
+        
+        .holographic-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, 
+                rgba(255, 0, 0, 0.7),
+                rgba(255, 100, 0, 0.6),
+                rgba(255, 255, 0, 0.5),
+                rgba(0, 255, 0, 0.5),
+                rgba(0, 0, 255, 0.5),
+                rgba(100, 0, 200, 0.6),
+                rgba(238, 130, 238, 0.5));
+            mix-blend-mode: color-dodge;
+            opacity: 0.8;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .character {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            backface-visibility: hidden;
+            z-index: 4;
+            mix-blend-mode: normal;
+            filter: contrast(1.05) brightness(1.02) drop-shadow(0 0 2px rgba(0,0,0,0.2));
+        }
+        
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            right: -100%;
+            bottom: -100%;
+            background: radial-gradient(
+                circle at center,
+                transparent 30%,
+                rgba(255, 255, 255, 0.9) 70%,
+                transparent 71%
+            );
+            mix-blend-mode: screen;
+            opacity: 0;
+            z-index: 2;
+            transform: translateZ(2px);
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .card:hover::after {
+            opacity: 0.7;
+        }
+        
+        .holographic-glare {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                rgba(255, 0, 0, 0) 0%,
+                rgba(255, 0, 0, 0.5) 10%,
+                rgba(255, 140, 0, 0.4) 20%,
+                rgba(255, 255, 0, 0.3) 30%,
+                rgba(0, 255, 0, 0.3) 40%,
+                rgba(0, 0, 255, 0.3) 50%,
+                rgba(100, 0, 200, 0.4) 60%,
+                rgba(238, 130, 238, 0.3) 70%,
+                rgba(255, 0, 0, 0) 80%);
+            transform: translate(-25%, -25%) rotate(0deg);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 3;
+            opacity: 0.8;
+            filter: blur(3px);
+        }
+        
+        /* 纸质纹理效果 */
+        .character::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none"/><path d="M0 0L100 100M100 0L0 100M25 0L25 100M75 0L75 100M0 25L100 25M0 75L100 75" stroke="rgba(0,0,0,0.05)" stroke-width="0.7"/></svg>');
+            mix-blend-mode: soft-light;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 5;
+            border-radius: 50%;
+        }
+        
+        /* 添加纸质浮雕纹理样式 */
+        .paper-texture {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.7 0"/></filter><rect width="200" height="200" filter="url(%23noise)" opacity="0.2"/></svg>');
+            pointer-events: none;
+            z-index: 5;
+            mix-blend-mode: soft-light;
+            opacity: 0.8;
+            border-radius: 50%;
+        }
+        
+        /* 添加额外纸质纹理边缘效果 */
+        .paper-edge {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+            pointer-events: none;
+            z-index: 6;
+        }
+        
+        /* HAHA图层样式 */
+        .haha-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            backface-visibility: hidden;
+            z-index: 7;
+            mix-blend-mode: normal;
+            top: 0;
+            left: 0;
+            transform: translateZ(10px);
+            filter: contrast(1.05) brightness(1.02) drop-shadow(0 0 2px rgba(0,0,0,0.2));
+            transition: transform 0.1s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <div class="card">
+            <img class="background" src="妮可背景.png" alt="Background">
+            <div class="holographic-layer"></div>
+            <div class="holographic-glare"></div>
+            <img class="character" src="妮可无字.png" alt="Character">
+            <!-- 添加纸质浮雕纹理层 -->
+            <div class="paper-texture"></div>
+            <div class="paper-edge"></div>
+            <!-- 添加HAHA图层 -->
+            <img class="haha-overlay" src="HAHA无白边.png" alt="HAHA">
+        </div>
+    </div>
+
+    <script>
+        const card = document.querySelector('.card');
+        const glare = document.querySelector('.holographic-glare');
+        const container = document.querySelector('.card-container');
+        const character = document.querySelector('.character');
+        const hahaOverlay = document.querySelector('.haha-overlay');
+        
+        // Handle mouse movement to create 3D effect and change holographic patterns
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Calculate normalized position (-1 to 1)
+            const normalizedX = (e.clientX - centerX) / (rect.width / 2);
+            const normalizedY = (e.clientY - centerY) / (rect.height / 2);
+            
+            // Increased rotation range for stronger effect
+            const rotateY = normalizedX * 20;
+            const rotateX = -normalizedY * 20;
+            
+            // Apply rotation to card
+            card.style.transform = `rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+            
+            // Move the glare effect with full 360-degree rotation capability
+            const glareX = 50 + normalizedX * 40;
+            const glareY = 50 + normalizedY * 40;
+            const rotationAngle = Math.atan2(normalizedY, normalizedX) * (180 / Math.PI);
+            
+            // Allow full rotation of the glare effect
+            glare.style.transform = `translate(${glareX - 50}%, ${glareY - 50}%) rotate(${rotationAngle}deg)`;
+            
+            // Change the opacity of the glare based on mouse position
+            const distanceFromCenter = Math.sqrt(normalizedX * normalizedX + normalizedY * normalizedY);
+            const glareOpacity = 0.6 + distanceFromCenter * 0.4;
+            glare.style.opacity = Math.min(glareOpacity, 0.9);
+            
+            // Dynamic rainbow effect only applied to background elements
+            const saturation = 120 + distanceFromCenter * 30;
+            const brightness = 110 + distanceFromCenter * 30;
+            document.querySelector('.background').style.filter = `saturate(${saturation}%) brightness(${brightness}%)`;
+            
+            // 为纸质效果添加轻微的浮动
+            const paperOffsetX = normalizedX * 2;
+            const paperOffsetY = normalizedY * 2;
+            document.querySelector('.paper-texture').style.transform = `translate(${paperOffsetX}px, ${paperOffsetY}px)`;
+            
+            // 为HAHA图层添加更明显的浮动效果
+            const hahaOffsetX = normalizedX * 15;
+            const hahaOffsetY = normalizedY * 15;
+            hahaOverlay.style.transform = `translateZ(25px) translate(${hahaOffsetX}px, ${hahaOffsetY}px)`;
+        });
+        
+        // Reset card position when mouse leaves
+        container.addEventListener('mouseleave', () => {
+            card.style.transform = 'rotateY(0deg) rotateX(0deg)';
+            document.querySelector('.background').style.filter = 'saturate(100%) brightness(100%)';
+            glare.style.opacity = '0.5';
+            glare.style.transform = 'translate(-25%, -25%) rotate(0deg)';
+            document.querySelector('.paper-texture').style.transform = 'translate(0px, 0px)';
+            hahaOverlay.style.transform = 'translateZ(25px) translate(0px, 0px)';
+        });
+    </script>
+</body>
+</html>
